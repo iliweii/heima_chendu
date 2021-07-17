@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- script jquery js -->
+    <script src="./js/jquery-3.5.1.js"></script>
+    <!-- script bootsrtap js -->
+    <script src="./js/popper.min.js"></script>
+    <script src="./js/bootstrap.min.js"></script>
+
+    <!-- script 数据 js -->
+    <script src="./js/database.js"></script>
+    <!-- script common js -->
+    <script src="./js/common.js"></script>
+
+    <!-- link bootsrtap css -->
+    <link rel="stylesheet" href="./css/bootstrap.min.css" />
+
+    <!-- link style css -->
+    <link rel="stylesheet" href="./css/style.css">
+    <!-- link favicon ico -->
+    <link rel="shortcut icon" href="./img/itheima.ico" type="image/x-icon">
+
+    <title>黑马程序员 晨读单词列表</title>
+
+</head>
+
+<body>
+
+    <div class="main shadow p-5 rounded">
+
+        <p><small>tips:查看单词列表。</small></p>
+
+        <!-- nav 部分 -->
+        <div style="display: flex;" class="my-2">
+            <button type="button" class="btn mx-2 btn-outline-danger page-index2">英译中</button>
+            <button type="button" class="btn mx-2 btn-outline-warning page-index">中译英</button>
+            <button type="button" class="btn mx-2 btn-outline-info"
+                onclick="window.location.replace('./index.html')">回到今日</button>
+
+            <div class="dropdown">
+                <button class="btn btn-outline-success dropdown-toggle datep" href="#" role="button"
+                    id="dropdownMenuLink" data-toggle="dropdown" aria-expanded="false">
+                    今日单词训练
+                </button>
+
+                <div class="dropdown-menu date-list" aria-labelledby="dropdownMenuLink">
+                    <a class="dropdown-item" href="#">Action</a>
+                    <a class="dropdown-item" href="#">Another action</a>
+                    <a class="dropdown-item" href="#">Something else here</a>
+                </div>
+            </div>
+            <button type="button" class="btn mx-2 btn-outline-info list-today">今日单词表</button>
+            <button type="button" class="btn mx-2 btn-outline-success"
+                onclick="window.location.replace('./list.html')">全部单词表</button>
+
+            <script>
+                // 获取黑马晨读日期列表
+                var datelist = getDateList()
+                // 将日期列表置空
+                $(".date-list").empty()
+                // 获取当前地址值
+                let pathname = window.location.pathname;
+                // 循环添加日期列表
+                for (let i = 0; i < datelist.length; i++) {
+                    $(".date-list").append(`<a class="dropdown-item" href="${pathname}?date=${datelist[i]}">${datelist[i]}</a>`)
+                }
+                // 日期列表添加“全部”
+                $(".date-list").append(`<a class="dropdown-item" href="${pathname}?date=all">全部</a>`)
+            </script>
+        </div>
+        <!-- nav部分结束 -->
+
+        <div class="input-group mb-3">
+            <input type="text" class="form-control search" placeholder="查找单词、音标、释义、学习日期" aria-label="查找单词、音标、释义、学习日期"
+                aria-describedby="button-search">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary dropdown-toggle study-date" type="button"
+                    data-toggle="dropdown" aria-expanded="false">学习日期</button>
+                <div class="dropdown-menu date-list2">
+                    <a class="dropdown-item" href="#">Action</a>
+                    <a class="dropdown-item" href="#">Another action</a>
+                    <a class="dropdown-item" href="#">Something else here</a>
+                    <div role="separator" class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#">Separated link</a>
+                </div>
+            </div>
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="button" id="button-search">搜索</button>
+            </div>
+        </div>
+
+        <table class="table table-sm">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">单词</th>
+                    <th scope="col">音标</th>
+                    <th scope="col">释义</th>
+                    <th scope="col">学习日期</th>
+                </tr>
+            </thead>
+            <tbody class="list-body"></tbody>
+        </table>
+
+    </div>
+
+    <script>
+        window.onload = function () {
+
+            // 获取url参数date的值
+            let date = getQueryVariable("date")
+            if (date == false) {
+                date = ""
+            }
+            // 获取数据
+            let list = getChenduList(date)
+            // 向表格中展示数据
+            TableAppend(list)
+
+            // 获取url参数date的值
+            let datep = getQueryVariable("date");
+            // 如果参数date不存在，初始化为当前日期
+            if (datep == false) {
+                datep = getNowFormatDate()
+            }
+            // 改变单词训练下拉框的值
+            $(".datep").text(datep + "单词训练")
+            // 中译英 page-index点击事件
+            $(".page-index").click(function () {
+                window.location.replace("./index.html?date=" + datep)
+            })
+            // 英译中 pahe-index2点击事件
+            $(".page-index2").click(function () {
+                window.location.replace("./index2.html?date=" + datep)
+            })
+            // 回到今日 list-today点击事件
+            $(".list-today").click(function () {
+                window.location.replace("./list.html?date=" + getNowFormatDate())
+            })
+
+            // 点击单词播放读音（有网状态下）
+            $("body").on("click", ".word", function () {
+                // 获取点击的单词序号
+                let index = $(".word").index(this)
+                // 获取单词
+                let word = $(".word").eq(index).text()
+                // 获取并播放单词读音
+                var msg = new SpeechSynthesisUtterance(word);
+                window.speechSynthesis.speak(msg);
+            })
+
+            // search 输入框输入事件
+            $(".search").keyup(function () {
+                // 获取搜索内容
+                let k = $(".search").val()
+                // 声明搜索结果数组
+                let l = []
+                // 循环判断，并向结果数组添加元素
+                for (let i = 0; i < list.length; i++) {
+                    // 对四个属性进行判断
+                    if (list[i].word.indexOf(k) > -1 || list[i].yinbiao.indexOf(k) > -1 || list[i].mean.indexOf(k) > -1 || list[i].date.indexOf(k) > -1) {
+                        l.push(list[i])
+                    }
+                }
+                // 向表格中展示结果数组
+                TableAppend(l)
+            })
+
+            // 获取黑马晨读日期列表
+            var datelist = getDateList()
+            // 将日期列表2置空
+            $(".date-list2").empty()
+            // 循环添加日期列表2
+            for (let i = 0; i < datelist.length; i++) {
+                $(".date-list2").append(`<a class="dropdown-item" onclick='$(".search").val("${datelist[i]}"); $(".search").keyup()'>${datelist[i]}</a>`)
+            }
+            // 日期列表2添加“全部”
+            $(".date-list2").append(`<a class="dropdown-item" onclick='$(".search").val(""); $(".search").keyup()'>全部</a>`)
+        }
+
+        /**
+         * 向表格中添加数据
+        */
+        function TableAppend(list) {
+            // 将list-body置空
+            $(".list-body").empty()
+            // 循环添加数据
+            for (let i = 0; i < list.length; i++) {
+                $(".list-body").append(`<tr>
+                    <th scope="row">${i + 1}</th>
+                    <td class="word">${list[i].word}</td>
+                    <td>${list[i].yinbiao}</td>
+                    <td>${list[i].mean}</td>
+                    <td>${list[i].date}</td>
+                </tr>`)
+            }
+        }
+    </script>
+
+</body>
+
+</html>

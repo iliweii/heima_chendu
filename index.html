@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- script jquery js -->
+    <script src="./js/jquery-3.5.1.js"></script>
+    <!-- script bootsrtap js -->
+    <script src="./js/popper.min.js"></script>
+    <script src="./js/bootstrap.min.js"></script>
+
+    <!-- script 数据 js -->
+    <script src="./js/database.js"></script>
+    <!-- script common js -->
+    <script src="./js/common.js"></script>
+
+    <!-- link bootsrtap css -->
+    <link rel="stylesheet" href="./css/bootstrap.min.css" />
+
+    <!-- link style css -->
+    <link rel="stylesheet" href="./css/style.css">
+    <!-- link favicon ico -->
+    <link rel="shortcut icon" href="./img/itheima.ico" type="image/x-icon">
+
+    <title>黑马程序员 晨读单词 中译英</title>
+
+</head>
+
+<body>
+
+    <div class="main shadow p-5 rounded">
+
+        <p><small>tips: 快速高强度记忆单词！加油</small></p>
+
+        <!-- nav 部分 -->
+        <div style="display: flex;" class="my-2">
+            <button type="button" class="btn mx-2 btn-outline-danger page-index2">英译中</button>
+            <button type="button" class="btn mx-2 btn-outline-warning page-index">中译英</button>
+            <button type="button" class="btn mx-2 btn-outline-info"
+                onclick="window.location.replace('./index.html')">回到今日</button>
+
+            <div class="dropdown">
+                <button class="btn btn-outline-success dropdown-toggle datep" href="#" role="button"
+                    id="dropdownMenuLink" data-toggle="dropdown" aria-expanded="false">
+                    今日单词训练
+                </button>
+
+                <div class="dropdown-menu date-list" aria-labelledby="dropdownMenuLink">
+                    <a class="dropdown-item" href="#">Action</a>
+                    <a class="dropdown-item" href="#">Another action</a>
+                    <a class="dropdown-item" href="#">Something else here</a>
+                </div>
+            </div>
+            <button type="button" class="btn mx-2 btn-outline-info list-today">今日单词表</button>
+            <button type="button" class="btn mx-2 btn-outline-success"
+                onclick="window.location.replace('./list.html')">全部单词表</button>
+
+            <script>
+                // 获取黑马晨读日期列表
+                var datelist = getDateList()
+                // 将日期列表置空
+                $(".date-list").empty()
+                // 获取当前地址值
+                let pathname = window.location.pathname;
+                // 循环添加日期列表
+                for (let i = 0; i < datelist.length; i++) {
+                    $(".date-list").append(`<a class="dropdown-item" href="${pathname}?date=${datelist[i]}">${datelist[i]}</a>`)
+                }
+                // 日期列表添加“全部”
+                $(".date-list").append(`<a class="dropdown-item" href="${pathname}?date=all">全部</a>`)
+            </script>
+        </div>
+        <!-- nav部分结束 -->
+
+        <p class="time">Question Time<span class="TIME">20</span>s</p>
+
+        <div class="JDT1">
+            <div class="JDT2"></div>
+        </div>
+
+        <div class="QUES py-5"></div>
+
+    </div>
+
+    <script>
+        window.onload = function () {
+
+            // 获取url参数date的值
+            let datep = getQueryVariable("date");
+            // 如果参数date不存在，初始化为当前日期
+            if (datep == false) {
+                datep = getNowFormatDate()
+            }
+            // 改变单词训练下拉框的值
+            $(".datep").text(datep + "单词训练")
+            // 中译英 page-index点击事件
+            $(".page-index").click(function () {
+                window.location.replace("./index.html?date=" + datep)
+            })
+            // 英译中 pahe-index2点击事件
+            $(".page-index2").click(function () {
+                window.location.replace("./index2.html?date=" + datep)
+            })
+            // 回到今日 list-today点击事件
+            $(".list-today").click(function () {
+                window.location.replace("./list.html?date=" + getNowFormatDate())
+            })
+            // 
+            if (datep == "all") {
+                datep = ""
+            }
+            // 获取随机单词（根据条件：date）
+            var eng = getChendu(datep)
+            // 置空QUES
+            $(".QUES").empty()
+            // 根据新的随机单词填充QUES
+            $(".QUES").append(`<p class="question">中文<strong>${eng.mean}
+                <small>[${eng.yinbiao}]</small>  </strong>
+                对应的英文应该是<input type="text" class="YouANS form-control span-input"></p>
+                <button type="submit" class="GO btn btn-primary mx-2">确定</button>
+                <button type="button" class="LOOKANS btn btn-success mx-2">看答案</button>
+                <span class="TrueANS form-control span-input" style="width: auto;"></span>
+            `)
+            // 设置倒计时 setInterval
+            let set_interval = setInterval(() => {
+                // 每个循环TIME数字减一
+                $(".TIME").text(Number($(".TIME").text()) - 1)
+                // 每个循环JDT2 进度条2长度减 1/20
+                $(".JDT2").css("width", Number($(".TIME").text()) * (100 / 20) + "%")
+                // 当时间为0时，暂停循环，展示答案
+                if ($(".TIME").text() == '0') {
+                    clearInterval(set_interval)
+                    // 展示答案
+                    showAns(eng)
+                }
+            }, 1000);
+            // 将焦点聚焦到YouANS输入框上
+            $(".YouANS").focus()
+            // GO的点击事件，暂停循环，展示答案
+            $("body").on("click", ".GO", function () {
+                // 暂停循环
+                clearInterval(set_interval)
+                // 展示答案
+                showAns(eng)
+            })
+            // NEXT的点击事件，重载页面
+            $("body").on("click", ".NEXT", function () {
+                location.reload()
+            })
+            // LOOKANS的点击事件，看答案
+            $("body").on("click", ".LOOKANS", function () {
+                // 暂停循环
+                clearInterval(set_interval)
+                // 查看答案
+                showAns(eng)
+            })
+            // 监听YouANs的输入事件，当点击回车的时候，模拟GO的点击事件
+            $('body').bind('keydown', ".YouANS", function (event) {
+                // 点击回车
+                if (event.keyCode == "13") {
+                    // 模拟GO的点击事件
+                    $(".GO").click()
+                }
+            })
+        }
+
+        /**
+         * 展示答案
+         * @param {*} eng 英文单词，包含word属性
+        */
+        function showAns(eng) {
+            // 如果YouANS输入框的值与 eng.word的值相同
+            if ($(".YouANS").val() == eng.word) {
+                // 输入框置通过状态
+                $(".YouANS").addClass("is-valid")
+            } else {
+                // 否则，输入框置警告状态
+                $(".YouANS").addClass("is-invalid")
+            }
+            // 将TrueANS 真实答案输入框展示答案
+            $(".TrueANS").text(eng.word)
+            // GO按钮添加NEXT类
+            $(".GO").addClass("NEXT")
+            // GO按钮文字置换
+            $(".GO").text("下一题")
+        }
+
+    </script>
+
+</body>
+
+</html>
