@@ -6,4 +6,6 @@
 
 ### 安装
 
-下载`黑马晨读.msi`，双击安装
+下载`heima_chendu.msi`，双击安装，将会在桌面创建`黑马晨读单词`的桌面图标，打开即可运行。
+
+下载地址：https://github.com/iliweii/heima_chendu/releases
