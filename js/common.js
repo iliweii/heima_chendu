@@ -123,7 +123,7 @@ function getChenduList(date = "") {
  */
 function getChendu(date = "") {
     let chendu_list = getChenduList(date)
-    let index = RandomNumBoth(0, chendu_list.length)
+    let index = RandomNumBoth(0, chendu_list.length - 1)
     let cd = chendu_list[index]
     cd.word = IgnoreSpaces(cd.word)
     return cd
